@@ -22,7 +22,7 @@ services:
       context: ../clix_dashboard_backend
       dockerfile: Dockerfile
       args:
-        Docker_UID: <host user id>  
+        DOCKER_UID: <host user id>  
     ports:
       - "5001:5000"
     volumes:
