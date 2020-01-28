@@ -38,6 +38,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ../clix_dashboard_ui:/home/node/app
+      - /home/node/app/node_modules
     ports:
       - '3000:3000'
     depends_on:
