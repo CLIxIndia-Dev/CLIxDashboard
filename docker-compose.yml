@@ -8,12 +8,12 @@ services:
     ports:
       - '5433:5432'
     volumes:
-      - ../clix_dashboard_backend/pg_data:/var/lib/postgresql/data
-      - ../clix_dashboard_backend/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d      
+      - /home/clix/CLIxDashboard/clix_dashboard_backend/pg_data:/var/lib/postgresql/data
+      - /home/clix/CLIxDashboard/clix_dashboard_backend/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d      
     environment:
-      - POSTGRES_DB=<db_name>
-      - POSTGRES_USER=<admin_name>
-      - POSTGRES_PASSWORD=<admin_password>
+      - POSTGRES_DB=clix_dashboard_db
+      - POSTGRES_USER=admin_clixdata
+      - POSTGRES_PASSWORD=clixdata
 
   flask-api:
     container_name: clix_dashboard_backend
@@ -22,28 +22,46 @@ services:
       context: ../clix_dashboard_backend
       dockerfile: Dockerfile
       args:
-        DOCKER_UID: <host user id>  
+        DOCKER_UID: 1000  
+    expose:
+      - "5000"
     ports:
       - "5001:5000"
     volumes:
-      - ../clix_dashboard_backend/app:/home/clix_dashboard_backend/app
-      - ../clix_dashboard_backend/SchoolImages:/home/clix_dashboard_backend/SchoolImages  
+      - /home/clix/CLIxDashboard/clix_dashboard_backend/app:/home/clix_dashboard_backend/app
+      - /home/clix/CLIxDashboard/clix_dashboard_backend/SchoolImages:/home/clix_dashboard_backend/SchoolImages  
+      - /home/clix/nginx-proxy/nginx-proxy-letsencrypt-data/certs/clixdashboard.tiss.edu:/home/clix_dashboard_backend/app/certificates
     depends_on:
       - "db_postgres"
+#    environment:
+#       - GUNICORN_CMD_ARGS="--certfile=/home/clix_dashboard_backend/app/certificates/crt.pem --keyfile=/home/clix_dashboard_backend/app/certificates/key.pem"
+#      - VIRTUAL_HOST=cdbackend.tiss.edu
+#      - VIRTUAL_PORT=5000
+#      - LETSENCRYPT_HOST=cdbackend.tiss.edu
+#      - LETSENCRYPT_EMAIL=satej.shende@tiss.edu
 
   client:
     container_name: clix_dashboard_ui
     build:
-      context: ../clix_dashboard_ui
+      context: /home/clix/CLIxDashboard/clix_dashboard_ui
       dockerfile: Dockerfile
     volumes:
-      - ../clix_dashboard_ui:/home/node/app
+      - /home/clix/CLIxDashboard/clix_dashboard_ui:/home/node/app
+      - /home/node/app/node_modules  
     ports:
       - '3000:3000'
     depends_on:
-      - "db_postgres"
+      - "flask-api"
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_HOST_URL=http://<server ip address>:5001
-        
+      - REACT_APP_HOST_URL=https://clixdashboard.tiss.edu:5001
+      - VIRTUAL_HOST=clixdashboard.tiss.edu
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=clixdashboard.tiss.edu
+      - LETSENCRYPT_EMAIL=satej.shende@tiss.edu
+
+networks:
+  default:
+    external:
+      name: clix-bridge-network
