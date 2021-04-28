@@ -29,16 +29,11 @@ services:
       - "5001:5000"
     volumes:
       - /home/clix/CLIxDashboard/clix_dashboard_backend/app:/home/clix_dashboard_backend/app
+      - /home/clix/CLIxDashboard/clix_dashboard_backend/migrations:/home/clix_dashboard_backend/migrations
       - /home/clix/CLIxDashboard/clix_dashboard_backend/SchoolImages:/home/clix_dashboard_backend/SchoolImages  
       - /home/clix/nginx-proxy/nginx-proxy-letsencrypt-data/certs/clixdashboard.tiss.edu:/home/clix_dashboard_backend/app/certificates
     depends_on:
       - "db_postgres"
-#    environment:
-#       - GUNICORN_CMD_ARGS="--certfile=/home/clix_dashboard_backend/app/certificates/crt.pem --keyfile=/home/clix_dashboard_backend/app/certificates/key.pem"
-#      - VIRTUAL_HOST=cdbackend.tiss.edu
-#      - VIRTUAL_PORT=5000
-#      - LETSENCRYPT_HOST=cdbackend.tiss.edu
-#      - LETSENCRYPT_EMAIL=satej.shende@tiss.edu
 
   client:
     container_name: clix_dashboard_ui
@@ -46,20 +41,25 @@ services:
       context: /home/clix/CLIxDashboard/clix_dashboard_ui
       dockerfile: Dockerfile
     volumes:
-      - /home/clix/CLIxDashboard/clix_dashboard_ui:/home/node/app
+      - /home/clix/CLIxDashboard/clix_dashboard_ui/node_modules:/home/node/app/node_modules
+      - /home/clix/CLIxDashboard/clix_dashboard_ui/package.json:/home/node/app/package.json
+      - /home/clix/CLIxDashboard/clix_dashboard_ui/package-lock.json:/home/node/app/package-lock.json
+      - /home/clix/CLIxDashboard/clix_dashboard_ui/public:/home/node/app/public
+      - /home/clix/CLIxDashboard/clix_dashboard_ui/src:/home/node/app/src
       - /home/node/app/node_modules  
     ports:
       - '3000:3000'
     depends_on:
       - "flask-api"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_HOST_URL=https://clixdashboard.tiss.edu:5001
-      - VIRTUAL_HOST=clixdashboard.tiss.edu
-      - VIRTUAL_PORT=3000
-      - LETSENCRYPT_HOST=clixdashboard.tiss.edu
-      - LETSENCRYPT_EMAIL=satej.shende@tiss.edu
+      #- REACT_APP_HOST_URL=<Url of backend container>
+      #add below lines if you are using nginx-proxy container with letsencrypt
+      - VIRTUAL_HOST=<Url of container>
+      - VIRTUAL_PORT=<host port of container>
+      - LETSENCRYPT_HOST=<hostname of container>
+      - LETSENCRYPT_EMAIL=<configured email>
 
 networks:
   default:
